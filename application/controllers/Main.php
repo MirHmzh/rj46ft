@@ -75,6 +75,7 @@ class Main extends CI_Controller {
 		$file_name = $file_path_arr[count($file_path_arr)-1];
 		header('Content-Disposition: attachment; filename="'.$file_name.'"');
 		$ftp = $this->ftp->download($file_path, "ftp_download/$file_name");
+		print_r($ftp);
 		echo json_encode(['data' => base_url('ftp_download/'.$file_name) ]);
 	}
 
