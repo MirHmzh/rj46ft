@@ -21,7 +21,9 @@ class Main extends CI_Controller {
 
 	public function list_ftp($dir = null)
 	{
-		$list = $this->ftp->list_files($dir == null ? '/' : $dir);
+		$dir = $this->input->post('dir');
+		$dir = (($dir == null || $dir == '') ? '/' : $dir);
+		$list = $this->ftp->list_files($dir);
 		$files = [];
 		$dirs = [];
 		foreach ($list as $k => $v) {
@@ -34,6 +36,7 @@ class Main extends CI_Controller {
 			}
 		}
 		echo json_encode([
+			'dir' => $dir,
 			'dirs' => $dirs,
 			'files' => $files,
 		]);
@@ -54,12 +57,12 @@ class Main extends CI_Controller {
 			$data = $this->upload->data();
 			// print_r($data);
 			// $ftp = $this->ftp->upload($data['full_path'], $cur_dir.'/'.$data['file_name'], 'ascii');
-			$ftp = $this->ftp->upload($data['full_path'], $data['file_name'], 'ascii');
+			$ftp = $this->ftp->upload($data['full_path'], $cur_dir.'/'.$data['file_name'], 'ascii');
 			echo json_encode([
 				'upload_status' => $data,
 				'ftp_status' => [
 					'status' => $ftp,
-					'path' => '/'.$cur_dir.'/'.$data['file_name']
+					'path' => $cur_dir == '/' ? $data['file_name'] : $cur_dir.'/'.$data['file_name']
 				]
 			]);
 		}

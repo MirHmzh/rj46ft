@@ -30,6 +30,9 @@
 		*{
 			font-family: "Montserrat";
 		}
+		.pointer{
+			cursor: pointer;
+		}
 	</style>
 	<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/bootstrap.min.css') ?>">
 	<link rel="stylesheet" type="text/css" href="<?= base_url('assets/css/dropzone.min.css') ?>">
@@ -41,16 +44,7 @@
 	<div class="wrapper">
 		<div class="container">
 			<div class="col-12">
-				<div class="row">
-					<form action="<?= base_url('main/upload_ftp') ?>" class="dropzone" id="my-awesome-dropzone">
-						<input type="text" name="cur_dir" value="/flash">
-						<input type="file" name="file_upload" />
-					</form>
-
-				</div>
-			</div>
-			<div class="col-12">
-				<div class="row">
+				<div class="row" id="droparea">
 					<table class="table table-borderless table-hover">
 					  	<thead>
 					    	<tr>
@@ -69,14 +63,57 @@
 	</div>
 </body>
 <script type="text/javascript" charset="utf-8">
+	let cur_dir = '/';
 	$(document).ready(function() {
 		getDir();
-		downloadFile()
+		// downloadFile();
+		let dropArea = document.getElementById('droparea');
+		['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+		 	dropArea.addEventListener(eventName, preventDefaults, false)
+		})
+		dropArea.addEventListener('drop', handleDrop, false)
 	});
-	function getDir(dir = null) {
+	function handleDrop(e) {
+		let dt = e.dataTransfer,
+			files = dt.files,
+			form_data = new FormData();
+		form_data.append('file', files[0]);
+		form_data.append('cur_dir', cur_dir);
 		$.ajax({
-			url: dir == null ? "<?= base_url('main/list_ftp') ?>" : "<?= base_url('main/list_ftp/') ?>"+dir,
-			type: 'GET',
+			url: "<?= base_url('main/upload_ftp') ?>",
+			type: 'POST',
+			dataType: 'json',
+			processData: false,
+			contentType: false,
+			data: form_data,
+			success: (data) => {
+				getDir();
+			},
+		});
+	}
+	function preventDefaults (e) {
+	  e.preventDefault()
+	  e.stopPropagation()
+	}
+	function backDir() {
+		let splitted = cur_dir.split("/");
+		splitted.pop();
+		cur_dir = splitted.join("/");
+		getDir();
+	}
+	function updateDir(dir) {
+		if(cur_dir == '/'){
+			cur_dir += dir;
+		}else{
+			cur_dir += '/'+dir;
+		}
+		getDir()
+	}
+	function getDir() {
+		$.ajax({
+			url: "<?= base_url('main/list_ftp/') ?>",
+			type: 'POST',
+			data: {dir: cur_dir},
 			dataType: 'json',
 			success: (data) => {
 				$('#list_dir').html('');
@@ -84,56 +121,48 @@
 					dirs = data.dirs,
 					doc_files = '',
 					doc_dirs = '';
-				console.log(files);
 				files.forEach(function(el, i) {
 					doc_files += `
-						<tr>
+						<tr class="pointer" onClick="downloadFile('${el}')">
 				      		<th scope="row">${el}</th>
 				    	</tr>
 					`;
 				});
 				dirs.forEach(function(el, i) {
 					doc_dirs += `
-						<tr>
+						<tr class="pointer" onClick="updateDir('${el}')">
 				      		<th scope="row">/${el}</th>
 				    	</tr>
 					`;
 				});
+				cur_dir = data.dir;
+				if(data.dir != '/'){
+					$('#list_dir').append(`
+						<tr class="pointer" onClick="backDir()">
+				      		<th scope="row">/..</th>
+				    	</tr>
+						`);
+				}
+
 				$('#list_dir').append(doc_dirs);
 				$('#list_dir').append(doc_files);
 			},
 		});
 	}
 
-	function downloadFile() {
+	function downloadFile(file_name) {
 		var request = $.ajax({
 			url: "<?= base_url('main/download_ftp') ?>",
 			type: 'POST',
-			// xhrFields : {
-			// 	responseType : 'blob',
-			// 	onprogress: function (e) {
-			// 		console.log(((e.loaded*100)/e.total));
-			// 	},
-			// },
 			dataType: "json",
-			data: {file_path : 'template.docx'},
+			data: {file_path : cur_dir+'/'+file_name},
 			success : function (data) {
 				var a = document.createElement('a');
-	            // var url = window.URL.createObjectURL(data.data);
 	            a.href = data.data;
-	            a.download = 'template.docx';
+	            a.download = file_name;
 	            a.click();
-	            	// window.URL.revokeObjectURL(url);
-		            // $(buttonEl).html('<i class="fa fa-check" style="display:none"></i><i class="fa fa-download" style="display:none"></i>');
-		            // $(buttonEl).find('.fa-check').fadeIn();
-		            // setTimeout(function (argument) {
-		            // 	$(buttonEl).find('.fa-check').fadeOut('slow', function (argument) {
-		            // 		$(buttonEl).find('.fa-download').fadeIn();
-		            // 	});
-		            // }, 1000)
 			}
 		});
-
 	}
 </script>
 </html>
