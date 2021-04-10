@@ -7,9 +7,9 @@ class Main extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->library('ftp');
-		$config['hostname'] = '192.168.1.13';
+		$config['hostname'] = '192.168.2.1';
 		$config['username'] = 'admin';
-		$config['password'] = '';
+		$config['password'] = 'sasasa12';
 		$config['debug']	= 'true';
 		$this->ftp->connect($config);
 	}
