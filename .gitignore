@@ -1,0 +1,4 @@
+ftp_upload/*
+ftp_download/*
+!ftp_download/.gitkeep
+!ftp_upload/.gitkeep
