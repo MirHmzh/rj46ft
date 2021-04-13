@@ -7,16 +7,26 @@ class Main extends CI_Controller {
 	{
 		parent::__construct();
 		$this->load->library('ftp');
-		$config['hostname'] = '192.168.2.1';
-		$config['username'] = 'admin';
-		$config['password'] = 'sasasa12';
+		$config['hostname'] = MIKROTIK_HOST;
+		$config['username'] = MIKROTIK_USER;
+		$config['password'] = MIKROTIK_PASS;
 		$config['debug']	= 'true';
 		$this->ftp->connect($config);
 	}
 
 	public function index()
 	{
+		$this->load->view('list');
+	}
+
+	public function index_ftp()
+	{
 		$this->load->view('main');
+	}
+
+	public function upload_info()
+	{
+		$this->load->view('upload');
 	}
 
 	public function list_ftp($dir = null)
@@ -55,8 +65,6 @@ class Main extends CI_Controller {
 		}
 		else{
 			$data = $this->upload->data();
-			// print_r($data);
-			// $ftp = $this->ftp->upload($data['full_path'], $cur_dir.'/'.$data['file_name'], 'ascii');
 			$ftp = $this->ftp->upload($data['full_path'], $cur_dir.'/'.$data['file_name'], 'ascii');
 			echo json_encode([
 				'upload_status' => $data,
